@@ -129,19 +129,19 @@ if __name__ == "__main__":
 
     # ----------------------------
     # OPTION 1 - Parse local HTML
-    # ----------------------------
-    with open("telebirr receipt.html", "r", encoding="utf-8") as f:
-        html = f.read()
+    # # ----------------------------
+    # with open("telebirr receipt.html", "r", encoding="utf-8") as f:
+    #     html = f.read()
 
-    data = parser.parse(html)
+    # data = parser.parse(html)
 
-    print(data)
+    # print(data)
 
     # ----------------------------
     # OPTION 2 - Parse from URL
     # ----------------------------
-    #
-    # url = "https://example.com/receipt/ABC123"
-    # html = parser.download_receipt(url)
-    # data = parser.parse(html)
-    # print(data)
+    
+    url = "https://transactioninfo.ethiotelecom.et/receipt/DFM46L0Z6Q"
+    html = parser.download_receipt(url)
+    data = parser.parse(html)
+    print(data)
