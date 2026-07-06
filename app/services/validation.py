@@ -11,6 +11,8 @@ from app.models.verification import VerificationSession, SessionStatus
 from app.models.transaction import TransactionReceipt
 from app.models.audit import AuditLog
 
+from app.tasks.fulfillment import send_merchant_notification, activate_subscriber_tier
+
 router = APIRouter(prefix="/validation", tags=["Validation Engine"])
 
 class ReceiptSubmission(BaseModel):
@@ -99,6 +101,18 @@ async def verify_receipt(payload: ReceiptSubmission, db: AsyncSession = Depends(
     )
     db.add(audit)
     await db.commit()
+    # =========================================================================
+    # Step 7 of Production Flow: Offload execution tasks to the background queue
+    # =========================================================================
+    send_merchant_notification.delay(
+        receipt_id=receipt.id,
+        txn_id=payload.txn_id,
+        settled_amount=payload.settled_amount
+    )
+    
+    activate_subscriber_tier.delay(
+        session_id=session.id
+    )
 
     # 7. Return success context to Flutter client
     return {
