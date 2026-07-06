@@ -5,9 +5,10 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
 
 from app.core.database import get_db
-from app.core.security import create_verification_token
+from app.core.security import create_verification_token, verify_merchant_auth
 from app.models.verification import VerificationSession, SessionStatus
 from app.models.audit import AuditLog
+
 
 router = APIRouter(prefix="/sessions", tags=["Verification Sessions"])
 
@@ -22,7 +23,10 @@ class SessionResponse(BaseModel):
     status: str
 
 @router.post("/create", response_model=SessionResponse)
-async def create_session(request: CreateSessionRequest, db: AsyncSession = Depends(get_db)):
+async def create_session(
+    request: CreateSessionRequest,
+    db: AsyncSession = Depends(get_db),
+    merchant: dict = Depends(verify_merchant_auth)):
     """
     Step 1 of Production Flow: Backend creates a signed verification token 
     and registers a pending verification session.
