@@ -19,6 +19,8 @@ from app.core.database import Base
 from app.models.verification import VerificationSession
 from app.models.transaction import TransactionReceipt
 from app.models.audit import AuditLog
+from app.models.merchant import Merchant
+from app.models.settings import PlatformSettings
 
 config = context.config
 # 2. Set the target metadata

@@ -5,8 +5,16 @@ celery_app = Celery(
     "payment_verification_workers",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
-    include=["app.tasks.fulfillment"] # Explicitly load fulfillment modules
+    # Explicitly load fulfillment modules
+    include=["app.tasks.fulfillment", "app.tasks.cleanup", "app.tasks.billing", "app.tasks.renewal",  ],
 )
+
+celery_app.conf.beat_schedule = {
+    "expire-sessions-every-60-seconds": {
+        "task": "tasks.session_expiration_worker",
+        "schedule": 60.0,
+    },
+}
 
 # Optimize configuration for stateless APIs
 celery_app.conf.update(
