@@ -22,6 +22,7 @@ from app.models.audit import AuditLog
 from app.models.merchant import Merchant
 from app.models.settings import PlatformSettings
 from app.models.admin_extensions import FeatureFlag, DynamicParserRule, FraudRecord
+from app.models.auth import AdminUser, MerchantAPIKey, LoginHistory, DeviceRegistration
 
 config = context.config
 # 2. Set the target metadata

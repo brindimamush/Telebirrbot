@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
 import jwt
 import secrets
+from typing import Tuple, Optional
 import hashlib
 from app.core.config import settings
+from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import Depends, HTTPException, status, Security
@@ -13,14 +15,35 @@ from app.models.merchant import Merchant
 # Setup secure header parsing for API keys
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=True)
 
-def generate_secure_api_key() -> tuple[str, str]:
-    """
-    Generates a raw secure API key for the merchant and its SHA-256 storage hash.
-    Returns: (raw_key, key_hash)
-    """
-    raw_key = f"pvp_live_{secrets.token_urlsafe(32)}"
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire, "token_type": "access"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def create_refresh_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "token_type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def generate_secure_api_key() -> Tuple[str, str, str]:
+    """Generates a raw key, its DB hash, and a visible prefix."""
+    raw_key = f"pvp_{secrets.token_urlsafe(32)}"
+    prefix = raw_key[:12]
     key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
-    return raw_key, key_hash
+    return raw_key, key_hash, prefix
+
+def hash_api_key(raw_key: str) -> str:
+    return hashlib.sha256(raw_key.encode()).hexdigest()
 
 async def verify_merchant_api_key(
     api_key: str = Security(API_KEY_HEADER),
