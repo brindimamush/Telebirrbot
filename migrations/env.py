@@ -21,6 +21,7 @@ from app.models.transaction import TransactionReceipt
 from app.models.audit import AuditLog
 from app.models.merchant import Merchant
 from app.models.settings import PlatformSettings
+from app.models.admin_extensions import FeatureFlag, DynamicParserRule, FraudRecord
 
 config = context.config
 # 2. Set the target metadata
